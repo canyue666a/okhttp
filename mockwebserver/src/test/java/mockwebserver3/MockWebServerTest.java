@@ -30,7 +30,6 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.HttpsURLConnection;
 import okhttp3.Handshake;
 import okhttp3.Headers;
@@ -46,8 +45,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -411,25 +408,6 @@ public final class MockWebServerTest {
     other.shutdown();
   }
 
-  @Test public void statementStartsAndStops() throws Throwable {
-    final AtomicBoolean called = new AtomicBoolean();
-    Statement statement = server.apply(new Statement() {
-      @Override public void evaluate() throws Throwable {
-        called.set(true);
-        server.url("/").url().openConnection().connect();
-      }
-    }, Description.EMPTY);
-
-    statement.evaluate();
-
-    assertThat(called.get()).isTrue();
-    try {
-      server.url("/").url().openConnection().connect();
-      fail();
-    } catch (ConnectException expected) {
-    }
-  }
-
   @Test public void shutdownWhileBlockedDispatching() throws Exception {
     // Enqueue a request that'll cause MockWebServer to hang on QueueDispatcher.dispatch().
     HttpURLConnection connection = (HttpURLConnection) server.url("/").url().openConnection();
@@ -606,6 +584,15 @@ public final class MockWebServerTest {
     assertThat(handshake.localCertificates().size()).isEqualTo(1);
     assertThat(handshake.peerPrincipal()).isNotNull();
     assertThat(handshake.peerCertificates().size()).isEqualTo(1);
+  }
+
+  @Test
+  public void startTwice() throws IOException {
+    MockWebServer server2 = new MockWebServer();
+
+    server2.start();
+    server2.start();
+    server2.shutdown();
   }
 
   @Test

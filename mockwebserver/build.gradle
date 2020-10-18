@@ -6,10 +6,10 @@ jar {
 
 dependencies {
   api project(':okhttp')
-  api deps.junit
 
   testImplementation project(':okhttp-testing-support')
   testImplementation project(':okhttp-tls')
+  testImplementation deps.junit
   testImplementation deps.assertj
 }
 
